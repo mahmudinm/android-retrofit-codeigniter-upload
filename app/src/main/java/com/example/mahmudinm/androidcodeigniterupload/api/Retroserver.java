@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class Retroserver {
 
-    private static String base_url = "http://mahmudin-android1.000webhostapp.com/api/";
+    private static String base_url = "http://yourip/WEB_API/api/";
 
     public static Retrofit getRetrofit() {
 
