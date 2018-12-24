@@ -6,8 +6,12 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -19,6 +23,9 @@ import com.example.mahmudinm.androidcodeigniterupload.api.Retroserver;
 import com.example.mahmudinm.androidcodeigniterupload.utils.FileUtils;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -34,6 +41,9 @@ public class MainActivity extends AppCompatActivity {
     ImageView imageView;
     ProgressDialog progressDialog;
     private static final String folder_foto = "AplikasiKameraku";
+    String mCurrentPhotoPath;
+    public static final int type_foto_code = 1 ;
+    private String selectImagePath;
     Uri uri;
 
     @Override
@@ -55,6 +65,16 @@ public class MainActivity extends AppCompatActivity {
                 intent.setType("image/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent, "Select Image"), 11);
+            }
+        });
+
+        selectCamera.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                uri = ambilOutputMediaFileUri(type_foto_code);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                startActivityForResult(intent, 12);
             }
         });
 
@@ -120,10 +140,63 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 11 && resultCode != 0) {
-
             uri = data.getData();
             imageView.setImageURI(uri);
-
+        } else if (requestCode == 12 && resultCode != 0) {
+//            uri = data.getData();
+            uri = Uri.parse(mCurrentPhotoPath);
+            selectImagePath = uri.getPath();
+            imageView.setImageURI(uri);
         }
     }
+
+
+    private Uri ambilOutputMediaFileUri(int type_foto_code) {
+        // mengambil alamat directory file
+        // return Uri.fromFile(ambilOutputMediaFile(type_foto_code));
+        return FileProvider.getUriForFile(MainActivity.this,
+                BuildConfig.APPLICATION_ID + ".provider",
+                ambilOutputMediaFile());
+    }
+
+    private File ambilOutputMediaFile() {
+        // atur alamat penyimpanan (SDCard/Pictures/folder_foto)
+        File penyimpananMediaDir = new File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                , folder_foto
+        );
+        Log.d("Directory Fileku", penyimpananMediaDir.getAbsolutePath());
+
+
+        // cek keberadaan folder
+        if (!penyimpananMediaDir.exists()) {
+            // cek jika tidak bisa membuat folder baru
+            if (!penyimpananMediaDir.mkdir()) {
+                Toast.makeText(this, "Gagal membuat folder "
+                        + folder_foto, Toast.LENGTH_SHORT).show();
+                return null;
+            }
+        }
+
+        // simpan format tanggal saat pengambilan foto
+        String waktu = new SimpleDateFormat("yyyyMMdd_hhMss"
+                , Locale.getDefault()).format(new Date());
+        Log.d("Waktu Pengambilan", waktu);
+
+        // variabel penampung nama file
+        File mediaFile;
+        // pasang nama foto dengan waktu
+        if (type_foto_code == type_foto_code) {
+            mediaFile = new File(penyimpananMediaDir.getPath() + File.separator
+                    + "IMG" + waktu + ".jpg");
+            Log.d("Nama FIle", mediaFile.getAbsolutePath());
+        } else {
+            return null;
+        }
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = "file:" + mediaFile.getAbsolutePath();
+        Log.d("mCurrentPhotoPath : ", mCurrentPhotoPath);
+        return mediaFile;
+    }
+
 }
